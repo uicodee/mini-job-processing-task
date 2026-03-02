@@ -11,11 +11,6 @@ import { User } from '@/user/entities/user.entity';
 import { TaskPriority, TaskStatus } from '../dto/types.dto';
 
 @Entity()
-@Index(['userId'])
-@Index(['status'])
-@Index(['type'])
-@Index(['scheduledAt'])
-@Index(['idempotencyKey'], { unique: true })
 export class Task {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -27,9 +22,11 @@ export class Task {
   updatedAt: Date;
 
   @ManyToOne(() => User, (user) => user.tasks, { onDelete: 'CASCADE' })
+  @Index()
   user: User;
 
   @Column()
+  @Index()
   type: string;
 
   @Column({ type: 'enum', enum: TaskPriority, default: TaskPriority.NORMAL })
@@ -39,9 +36,11 @@ export class Task {
   payload: Record<string, any>;
 
   @Column({ type: 'enum', enum: TaskStatus, default: TaskStatus.PENDING })
+  @Index()
   status: TaskStatus;
 
   @Column({ unique: true })
+  @Index({ unique: true })
   idempotencyKey: string;
 
   @Column({ default: 0 })
@@ -51,6 +50,7 @@ export class Task {
   lastError: string | null;
 
   @Column({ type: 'timestamptz', nullable: true })
+  @Index()
   scheduledAt: Date | null;
 
   @Column({ type: 'timestamptz', nullable: true })

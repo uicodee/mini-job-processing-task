@@ -1,98 +1,163 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Mini Job Processing Platform
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A background job processing API built with NestJS, PostgreSQL, Redis, and BullMQ.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Stack
 
-## Description
+- **NestJS** — modular server framework
+- **TypeORM** + **PostgreSQL** — persistence
+- **BullMQ** + **Redis** — job queue with priority, delay, and retry
+- **Passport JWT** — authentication
+- **Swagger** — API documentation at `/api`
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+---
 
-## Project setup
+## Setup
+
+### Prerequisites
+
+- Node.js 20+
+- Docker (for PostgreSQL and Redis)
+
+### 1. Start infrastructure
 
 ```bash
-$ npm install
+docker run -d --name postgres \
+  -e POSTGRES_USER=postgres \
+  -e POSTGRES_PASSWORD=postgres \
+  -e POSTGRES_DB=mini-job-processing-task \
+  -p 5433:5432 postgres:16
+
+docker run -d --name redis -p 6379:6379 redis:7
 ```
 
-## Compile and run the project
+### 2. Configure environment
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+cp .env.example .env
+# Edit .env if needed (DB credentials, JWT_SECRET, Redis host/port)
 ```
 
-## Run tests
+### 3. Install dependencies
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+npm install
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### 4. Run migrations
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npm run migration:run
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### 5. Start the application
 
-## Resources
+```bash
+npm run start:dev
+```
 
-Check out a few resources that may come in handy when working with NestJS:
+Swagger UI: http://localhost:4000/api
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+---
 
-## Support
+## API Overview
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+### Auth (public)
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/auth/register` | Register user, returns JWT |
+| POST | `/auth/login` | Login, returns JWT |
 
-## Stay in touch
+### Tasks (requires Bearer token)
+| Method | Path | Role | Description |
+|--------|------|------|-------------|
+| POST | `/tasks` | USER, ADMIN | Create task |
+| GET | `/tasks` | USER, ADMIN | List tasks (USER: own only) |
+| POST | `/tasks/:id/cancel` | USER, ADMIN | Cancel PENDING task |
+| POST | `/tasks/:id/reprocess` | ADMIN | Reprocess FAILED task |
+| GET | `/tasks/metrics` | ADMIN | Aggregated metrics |
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+### Query parameters for `GET /tasks`
+- `status` — filter by TaskStatus
+- `type` — filter by task type (e.g. `email`)
+- `from` / `to` — ISO date range on `createdAt`
+- `page` / `limit` — pagination (default: page=1, limit=20)
 
-## License
+---
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+## Architecture
+
+```
+src/
+├── auth/           # JWT strategy, guards, register/login
+├── user/           # User entity + service
+├── task/           # Task CRUD, cancel, reprocess, metrics
+├── queue/          # BullMQ queue module + QueueService
+├── worker/         # TaskProcessor (BullMQ consumer)
+├── mock/           # MockService: simulates 2–5s work, 25% failure rate
+└── database/       # TypeORM DataSource + DatabaseModule
+```
+
+### Job lifecycle
+
+```
+POST /tasks → DB (PENDING) → BullMQ queue
+    ↓
+Worker picks up → DB (PROCESSING)
+    ↓ success           ↓ failure
+DB (COMPLETED)     retry (max 3, exponential backoff 5s)
+                        ↓ exhausted
+                   DB (FAILED) → dead-letter queue
+```
+
+### Priority mapping
+
+| API value | BullMQ priority |
+|-----------|----------------|
+| `high`    | 1 |
+| `normal`  | 2 |
+| `low`     | 3 |
+
+Lower BullMQ priority number = processed first.
+
+### Rate limiting
+
+Per-type rate limits are defined in `src/queue/queue.constants.ts`:
+
+```ts
+email:  { max: 5, duration: 60_000 }   // 5 per minute
+report: { max: 2, duration: 60_000 }   // 2 per minute
+```
+
+Global HTTP throttle: 60 requests/minute per IP (via `@nestjs/throttler`).
+
+### Idempotency
+
+The `idempotencyKey` field has a DB-level unique constraint. A duplicate key on `POST /tasks` returns `409 Conflict` — the job is not added to the queue a second time.
+
+### Concurrency safety
+
+BullMQ uses Redis locks to guarantee a job is never processed by two workers simultaneously. The processor additionally checks for terminal states (`COMPLETED`, `CANCELLED`) before processing.
+
+---
+
+## Design Decisions & Tradeoffs
+
+| Decision | Rationale |
+|----------|-----------|
+| Single `task-queue` for all types | Simpler ops; per-type rate limiting via separate queues would give finer control but require more Redis connections |
+| `PENDING` reset on retry | Keeps status accurate during backoff window; a dedicated `RETRYING` status would be cleaner but adds enum complexity |
+| DB-level unique on `idempotencyKey` | Guarantees correctness even under concurrent requests; application-level check is a fast-path optimisation |
+| `JwtAuthGuard` globally applied | Reduces boilerplate; `@Public()` decorator opts out individual endpoints |
+| Worker in the same process | Acceptable for MVP; in production a separate worker process/container is recommended to scale independently |
+| MockService for simulation | Keeps the business logic decoupled from actual job implementation |
+
+---
+
+## Migration commands
+
+```bash
+npm run migration:generate   # generate new migration from entity changes
+npm run migration:run        # apply pending migrations
+npm run migration:revert     # revert last migration
+```

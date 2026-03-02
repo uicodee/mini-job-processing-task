@@ -1,34 +1,70 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Param,
+  Body,
+  Query,
+  Request,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { TaskService } from './task.service';
 import { CreateTaskDto } from './dto/create-task.dto';
-import { UpdateTaskDto } from './dto/update-task.dto';
+import { ListTasksDto } from './dto/list-tasks.dto';
+import { TaskResponseDto, PaginatedTasksDto } from './dto/task-response.dto';
+import { Roles } from '../auth/roles.decorator';
+import { Role } from '../user/dto/types.dto';
 
-@Controller('task')
+@ApiTags('tasks')
+@ApiBearerAuth()
+@Controller('tasks')
 export class TaskController {
   constructor(private readonly taskService: TaskService) {}
 
   @Post()
-  create(@Body() createTaskDto: CreateTaskDto) {
-    return this.taskService.create(createTaskDto);
+  @ApiOperation({ summary: 'Create a new task' })
+  @ApiResponse({ status: 201, type: TaskResponseDto })
+  @ApiResponse({ status: 409, description: 'Idempotency key already used' })
+  create(@Body() dto: CreateTaskDto, @Request() req: any) {
+    return this.taskService.create(dto, req.user);
   }
 
   @Get()
-  findAll() {
-    return this.taskService.findAll();
+  @ApiOperation({ summary: 'List tasks (USER sees own, ADMIN sees all)' })
+  @ApiResponse({ status: 200, type: PaginatedTasksDto })
+  async findAll(@Query() dto: ListTasksDto, @Request() req: any) {
+    const { data, total } = await this.taskService.findAll(dto, req.user);
+    return { data, total, page: dto.page ?? 1, limit: dto.limit ?? 20 };
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.taskService.findOne(+id);
+  @Post(':id/cancel')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Cancel a PENDING task' })
+  @ApiResponse({ status: 200, type: TaskResponseDto })
+  cancel(@Param('id') id: string, @Request() req: any) {
+    return this.taskService.cancel(id, req.user);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateTaskDto: UpdateTaskDto) {
-    return this.taskService.update(+id, updateTaskDto);
+  @Post(':id/reprocess')
+  @HttpCode(HttpStatus.OK)
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Reprocess a FAILED task (ADMIN only)' })
+  @ApiResponse({ status: 200, type: TaskResponseDto })
+  reprocess(@Param('id') id: string) {
+    return this.taskService.reprocess(id);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.taskService.remove(+id);
+  @Get('metrics')
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Get task metrics (ADMIN only)' })
+  metrics() {
+    return this.taskService.getMetrics();
   }
 }
