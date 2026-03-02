@@ -46,7 +46,7 @@ export class AuthService {
   async login(dto: LoginDto): Promise<{ accessToken: string }> {
     this.logger.log(`Login attempt for email: ${dto.email}`);
 
-    const user = await this.userService.findByEmail(dto.email);
+    const user = await this.userService.findByEmailWithPassword(dto.email);
     if (!user || !user.isActive) {
       this.logger.warn(`Login failed — user not found or inactive: ${dto.email}`);
       throw new UnauthorizedException('Invalid credentials');

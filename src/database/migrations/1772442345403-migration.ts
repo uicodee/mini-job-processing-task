@@ -1,12 +1,12 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
-export class Migration1772434975396 implements MigrationInterface {
-    name = 'Migration1772434975396'
+export class Migration1772442345403 implements MigrationInterface {
+    name = 'Migration1772442345403'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`CREATE TYPE "public"."task_priority_enum" AS ENUM('high', 'normal', 'low')`);
-        await queryRunner.query(`CREATE TYPE "public"."task_status_enum" AS ENUM('PENDING', 'PROCESSING', 'COMPLETED', 'FAILED', 'CANCELLED')`);
-        await queryRunner.query(`CREATE TABLE "task" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "type" character varying NOT NULL, "priority" "public"."task_priority_enum" NOT NULL DEFAULT 'normal', "payload" jsonb NOT NULL DEFAULT '{}', "status" "public"."task_status_enum" NOT NULL DEFAULT 'PENDING', "idempotencyKey" character varying NOT NULL, "attempts" integer NOT NULL DEFAULT '0', "lastError" text, "scheduledAt" TIMESTAMP WITH TIME ZONE, "startedAt" TIMESTAMP WITH TIME ZONE, "completedAt" TIMESTAMP WITH TIME ZONE, "userId" uuid, CONSTRAINT "UQ_e14d86e97c138884775c5658c83" UNIQUE ("idempotencyKey"), CONSTRAINT "PK_fb213f79ee45060ba925ecd576e" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE TYPE "public"."task_status_enum" AS ENUM('pending', 'processing', 'completed', 'failed', 'cancelled')`);
+        await queryRunner.query(`CREATE TABLE "task" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "type" character varying NOT NULL, "priority" "public"."task_priority_enum" NOT NULL DEFAULT 'normal', "payload" jsonb NOT NULL DEFAULT '{}', "status" "public"."task_status_enum" NOT NULL DEFAULT 'pending', "idempotencyKey" character varying NOT NULL, "attempts" integer NOT NULL DEFAULT '0', "lastError" text, "scheduledAt" TIMESTAMP WITH TIME ZONE, "startedAt" TIMESTAMP WITH TIME ZONE, "completedAt" TIMESTAMP WITH TIME ZONE, "userId" uuid, CONSTRAINT "UQ_e14d86e97c138884775c5658c83" UNIQUE ("idempotencyKey"), CONSTRAINT "PK_fb213f79ee45060ba925ecd576e" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE INDEX "IDX_f316d3fe53497d4d8a2957db8b" ON "task" ("userId") `);
         await queryRunner.query(`CREATE INDEX "IDX_8a87314e6b7ebcc13e967c064a" ON "task" ("type") `);
         await queryRunner.query(`CREATE INDEX "IDX_2fe7a278e6f08d2be55740a939" ON "task" ("status") `);

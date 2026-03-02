@@ -1,9 +1,14 @@
+export enum TaskType {
+  EMAIL = 'email',
+  REPORT = 'report',
+}
+
 export enum TaskStatus {
-  PENDING = 'PENDING',
-  PROCESSING = 'PROCESSING',
-  COMPLETED = 'COMPLETED',
-  FAILED = 'FAILED',
-  CANCELLED = 'CANCELLED',
+  PENDING = 'pending',
+  PROCESSING = 'processing',
+  COMPLETED = 'completed',
+  FAILED = 'failed',
+  CANCELLED = 'cancelled',
 }
 
 export enum TaskPriority {
